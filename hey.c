@@ -1,5 +1,5 @@
 #include<stdio.h>
 int main()
 {
-printf("hey!.. im halfblood");
+printf("hey!.. i'm halfblood");
 }
