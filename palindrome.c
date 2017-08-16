@@ -1,5 +1,14 @@
 
+/*2.      An automated system is designed for palindrome check which has equipped with LIFO based access memory. The system reads one character at a time from the input symbol which contains both word (W) and reversal of word (WR). Sample case, W#WR: 110#011
 
+(i)     Push into LIFO memory (one by one before this symbol “#”)
+
+(ii)   Do not perform either insert or delete if you read this symbol “#”
+
+(iii) Pop from LIFO memory (after this symbol “#”) only if the read symbol is same as the top element
+
+After ending the reading, if LIFO memory is empty then print “PALINDROME”. Otherwise, print “NON-PALINDROME”.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include<string.h>
