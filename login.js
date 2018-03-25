@@ -5,14 +5,25 @@ var connect = require('connect');
 var Pool = require('pg').Pool;
 var express = require('express');
 var path = require('path');
+var crypto = require('crypto');
+var session = require('express-session');
 
 var bodyParser = require('body-parser')
+
+var fs = require('fs'); // bring in the file system api
+var mustache = require('mustache'); // bring in mustache template engine
 
 var app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }))
-
 app.use(bodyParser.json())
+
+app.use(session({
+    secret: 'someRandomSecretValue',
+    cookie: { maxAge: 1000 * 60 * 24 },
+    saveUninitialized: false,
+    resave: true
+}));
 
 
 var config = {
@@ -25,6 +36,7 @@ var config = {
 
 var pool = new Pool(config); //connect to the database
 
+
 app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname, 'login.html'));
 })
@@ -35,18 +47,35 @@ app.get('/signup', function(req, res) {
 app.post('/logStat', function(req, res) {
     var username = req.body.username;
     var password = req.body.password;
-    pool.query("SELECT customer_name, customer_password FROM customers WHERE customer_name='" + username + "' AND customer_password='" + password + "'", function(err, result) {
+    pool.query("SELECT * FROM customers WHERE customer_name='" + username + "' AND customer_password='" + password + "'", function(err, result) {
         if (err) {
             res.status(500).send(err.toString());
         } else {
             if (result.rows.length === 0) {
-                res.send('Invalid Creditianls');
+                res.redirect('/home');
             } else {
-                res.send('User Validated');
+                req.session.auth = { userId: result.rows[0].customer_id };
+                res.redirect('/home');
             }
         }
     });
 })
+
+app.get('/home', function(req, res) {
+    if (req.session && req.session.auth && req.session.auth.userId) {
+        var data = { "id": req.session.auth.userId };
+        var page = fs.readFileSync('home.html', "utf8");
+        var html = mustache.to_html(page, data);
+        res.send(html);
+    } else {
+        res.send('Not logged in');
+    }
+});
+
+app.get('/logout', function(req, res) {
+    delete req.session.auth;
+    res.send('You are logged out');
+});
 
 app.post('/register', function(req, res) {
     var username = req.body.username;
